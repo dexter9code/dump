@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useNavigation} from '@react-navigation/native';
+import {StackNavigationProp} from '@react-navigation/stack';
 import {useState} from 'react';
 import {
   View,
@@ -7,9 +9,11 @@ import {
   TextInput,
   Button,
   StatusBar,
+  Pressable,
 } from 'react-native';
 import {useDispatch} from 'react-redux';
 import {sign_user} from '../helper/http';
+import {AuthStackParamsList} from '../routes/AuthStack';
 import {signIn} from '../slice/AuthSlice';
 
 type ReturnObject = {
@@ -18,10 +22,13 @@ type ReturnObject = {
   name: string;
 };
 
+type LoginParamsType = StackNavigationProp<AuthStackParamsList, 'login'>;
+
 const LoginScreen = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const dispatch = useDispatch();
+  const navigation = useNavigation<LoginParamsType>();
 
   const onPressHandler = async () => {
     console.log(email, password);
@@ -63,6 +70,9 @@ const LoginScreen = () => {
         />
       </View>
       <Button title="Login" onPress={onPressHandler} />
+      <Pressable onPress={() => navigation.navigate('forgot')}>
+        <Text>Forgot Password?</Text>
+      </Pressable>
     </View>
   );
 };
