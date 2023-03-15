@@ -27,5 +27,13 @@ app.post(`/login`, async (req, res, next) => {
   }
 });
 
+app.get('/user-info', async (req, res, next) => {
+  res.json({
+    message: `Success`,
+    email: EMAIL,
+    name: `John`,
+  });
+});
+
 const PORT = 8989;
 app.listen(PORT, () => console.log(`listening on the PORT ${PORT}`));

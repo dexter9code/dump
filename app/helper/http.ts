@@ -16,3 +16,10 @@ export async function sign_user(email: string, password: string) {
 
   return data;
 }
+export async function getInfo() {
+  const res = await apiClient.get('user-info');
+
+  const data = await res.data;
+
+  return data;
+}
