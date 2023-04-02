@@ -1,0 +1,289 @@
+
+import React, { Component, useEffect, useReducer, useState } from 'react';
+import {
+    AppState,
+    Button,
+    Keyboard,
+    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
+    Image,
+    ImageBackground,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    Pressable, Switch
+} from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { connect } from 'react-redux';
+// import { changePassword, loginUserWithFB, setApp } from '../../redux/actions/app';
+import { ScaledSheet } from 'react-native-size-matters';
+import CustomAuthHeader from '../../customcomponent/CustomAuthHeader';
+import CustomTextInput from '../../customcomponent/CustomTextInput';
+import { getQuestinnarie } from '../../redux/actions/app';
+import { ScrollView } from 'react-native-gesture-handler';
+import { Modal } from 'react-native-paper';
+import { MultipleSelectList, SelectList } from 'react-native-dropdown-select-list';
+import RadioForm from 'react-native-simple-radio-button';
+// import MultiSelect from 'react-native-multiple-select';
+
+
+const mapStateToProps = states => ({ app: states.app });
+const mapDispatchToProps = dispatch => ({ dispatch });
+
+const TIME_DATA = [
+    { key: '1', value: "1:00 PM" },
+    { key: '2', value: "2:00 PM" },
+    { key: '3', value: "3:00 PM" },
+    { key: '4', value: "4:00 PM" },
+    { key: '5', value: "5:00 PM" },
+    { key: '6', value: "6:00 PM" },
+    { key: '7', value: "7:00 PM" },
+    { key: '8', value: "8:00 PM" }
+]
+
+const COMMON_WIDTH = 350
+const IPAD_WIDTH = '350@vs'
+const OptionsReducer = (state, action) => {
+    switch (action.type) {
+        case 'add':
+            return [...state, action.payload.item]
+        case 'remove':
+            const newDt = state.filter(item => item !== action.payload.item)
+            return [...newDt]
+        default:
+            return state;
+    }
+}
+
+const RadioReducer = (state, action) => {
+    switch (action.type) {
+        case 'update':
+            return { ...state, ...action.payload }
+        default:
+            return state;
+    }
+}
+
+const WeekReducer = (state, action) => {
+    switch (action.type) {
+        case 'monday':
+            return { ...state, monday: !state.monday }
+        case 'tuesday':
+            return { ...state, tuesday: !state.tuesday }
+        case 'wednesday':
+            return { ...state, wednesday: !state.wednesday }
+        case 'thursday':
+            return { ...state, thursday: !state.thursday }
+        case 'friday':
+            return { ...state, friday: !state.friday }
+        case 'saturday':
+            return { ...state, saturday: !state.saturday }
+        case 'sunday':
+            return { ...state, sunday: !state.sunday }
+        default:
+            state
+    }
+}
+
+const AboutUsScreen = connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(props => {
+    const { dispatch, app } = props;
+
+    useEffect(() => {
+        dispatch(getQuestinnarie())
+    }, [])
+    const userQuestions = props.app.questionnarieData.questionares
+    const scheduleData = props.app.questionnarieData.availabilityPreferences
+
+    const [optionsState, optionsDispatch] = useReducer(OptionsReducer, [])
+    const [weekState, weekDispatch] = useReducer(WeekReducer, { monday: false, tuesday: false, wednesday: false, thursday: false, friday: false, saturday: false, sunday: false })
+    const [radioState, radioDispatch] = useReducer(RadioReducer, {})
+
+
+    const [selected, setSelected] = useState([])
+    const [enabled, setEnabled] = useState(false)
+    const [weekDays, setWeekDays] = useState([])
+    const [education, setEducation] = useState('')
+    const [time, setTime] = useState([])
+
+    const onPressHandler = (item) => {
+        if (optionsState.includes(item)) {
+            console.log('is true')
+            optionsDispatch({ type: 'remove', payload: { item } })
+        } else {
+            optionsDispatch({ type: 'add', payload: { item } })
+        }
+    }
+
+    console.log(radioState, `iter`)
+
+    return (
+        <ScrollView style={styles.parentRoot}  >
+            <Pressable style={{ backgroundColor: 'white' }} >
+                {userQuestions?.map((item, index) => {
+                    if (item.type === 'checkbox') {
+                        return (
+                            <View style={{ marginHorizontal: 14 }} >
+                                <Text style={[styles.common_text, { marginVertical: 12 }]}>{item.title}</Text>
+                                {item.options.key.map((options, index) => {
+                                    return (
+                                        <Pressable key={index} onPress={() => onPressHandler(options)} style={{ backgroundColor: optionsState && optionsState.includes(options) ? 'red' : '#f0f5f9', marginVertical: 5, padding: 8, justifyContent: 'flex-start', alignItems: 'flex-start', borderRadius: 5, borderWidth: .3, width: COMMON_WIDTH }}>
+                                            <Text style={{ fontWeight: '600', fontSize: 20, letterSpacing: 1, textTransform: 'capitalize' }}>{options}</Text>
+                                        </Pressable>
+                                    )
+                                })}
+                            </View>
+                        )
+                    }
+                    else if (item.type === 'radio') {
+                        const userRadioData = []
+                        item.options.key.map((item, index) => {
+                            userRadioData.push({ label: item, value: item })
+                        })
+
+                        const onRadioPressHandler = (value, typeOfRadio) => {
+                            const createObj = { [typeOfRadio]: value }
+                            radioDispatch({ type: 'update', payload: createObj })
+                        }
+
+                        return (
+                            <View style={{ marginLeft: 15 }}>
+                                <Text style={styles.common_text}>{item.title}</Text>
+                                <View style={{ marginTop: 10, width: COMMON_WIDTH, padding: 8, marginVertical: 10, borderRadius: 4, borderWidth: .5, borderColor: 'red' }}>
+                                    <RadioForm
+                                        radio_props={userRadioData}
+                                        initial={0}
+                                        onPress={(value) => onRadioPressHandler(value, item.field_key)}
+                                        selectedButtonColor={"red"}
+                                        buttonColor={"red"}
+                                        animation={true}
+                                    />
+                                </View>
+
+                            </View>
+                        )
+                    }
+                    else if (item.type === 'multiselect') {
+                        const updateKeys = []
+                        item.options.key.map((item, index) => {
+                            updateKeys.push({ key: `${index}`, value: item })
+                        })
+                        return (
+
+                            <View style={{ padding: 10 }} >
+                                <MultipleSelectList data={updateKeys} setSelected={v => setSelected(v)} label={item.title} save='value' />
+                            </View>
+                        )
+
+                    }
+                    else if (item.type === 'select') {
+                        const updatedKeys = []
+                        item.options.key.map((item, index) => {
+                            updatedKeys.push({ key: `${index}`, value: item })
+                        })
+                        return (
+                            <View>
+                                <Text style={{ fontSize: 20, fontWeight: "500" }}>{item.title}</Text>
+                                <View style={{ padding: 20 }} >
+                                    <SelectList data={updatedKeys} setSelected={v => setEducation(v)} label={item.title} save='value' badgeStyles={{ backgroundColor: '#ae1d00' }} />
+                                </View>
+                            </View>
+
+                        )
+                    }
+                    else if (item.type === 'schedule') {
+                        console.log(item)
+                        return (
+                            <View style={{ padding: 20 }} >
+                                <Text>john cena</Text>
+                            </View>
+                        )
+                    }
+                })}
+            </Pressable>
+            <View style={{ alignItems: 'center', borderWidth: 1, marginHorizontal: 4 }} >
+                <Text style={{ fontSize: 18, fontWeight: '800', textTransform: 'capitalize', marginVertical: 10 }}>availability Preferences</Text>
+                {scheduleData.map((item, index) => {
+                    const onSwitchHandler = (day) => {
+                        if (weekState[day.toLowerCase()]) {
+                            setTime([])
+                        }
+                        weekDispatch({ type: `${day.toLowerCase()}` })
+                    }
+                    return (
+                        <View key={index} style={{ minHeight: 20, }}>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: COMMON_WIDTH }} >
+                                <Text style={{ fontSize: 18, fontWeight: '600', marginLeft: weekState[item.toLowerCase()] ? 15 : 0 }}>{item}</Text>
+                                <Switch
+                                    value={weekState[item.toLowerCase()]}
+                                    onValueChange={() => {
+                                        onSwitchHandler(item)
+                                    }}
+                                    id={index}
+                                    trackColor={{ false: '#767577', true: '#81b0ff' }} />
+                            </View>{
+                                weekState[item.toLowerCase()] ?
+                                    <View style={{ padding: 10 }}>
+                                        <MultipleSelectList data={TIME_DATA} boxStyles={{ width: COMMON_WIDTH }} maxHeight={300} setSelected={v => setTime(v)} label={'Select Time'} save='value' />
+                                    </View> : (
+                                        null
+                                    )
+                            }
+
+                        </View>
+                    )
+                })}
+            </View>
+        </ScrollView>
+    );
+});
+
+
+export default AboutUsScreen;
+const styles = ScaledSheet.create({
+    parentRoot: {
+        flex: 1,
+        backgroundColor: 'white'
+    },
+    container: {
+        flex: 1,
+    },
+    listWrapper: {
+        flex: 1,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: .5,
+        elevation: 10,
+        shadowRadius: 5
+    },
+    listContainer: {
+        flex: 1,
+        backgroundColor: '#FFF',
+        borderTopLeftRadius: 15,
+        borderTopRightRadius: 15
+    },
+    item: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#CCCCCC55'
+    },
+    tabHeading: {
+        padding: 20,
+        flexDirection: 'row',
+    },
+    title: {
+        textTransform: 'capitalize',
+        color: '#000'
+    },
+    common_text: {
+        fontSize: 20, fontWeight: "500", textTransform: 'capitalize'
+    }
+});
+
