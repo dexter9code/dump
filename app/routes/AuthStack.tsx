@@ -11,7 +11,7 @@ const Stack = createStackNavigator();
 
 const AuthStack = () => {
   return (
-    <Stack.Navigator initialRouteName="image">
+    <Stack.Navigator initialRouteName="question">
       <Stack.Screen name="image" component={ImagePickScreen} />
       <Stack.Screen name="match" component={ProfileScreen} />
       <Stack.Screen name="question" component={QuestionnaireScreen} />

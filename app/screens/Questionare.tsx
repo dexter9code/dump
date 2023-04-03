@@ -118,7 +118,8 @@ const QuestionnaireScreen = () => {
     weekendReducer,
     weekendInitialState,
   );
-  console.log(weekendState);
+  console.log(switchState);
+  console.log(weekendState, `state 2`);
   return (
     <ScrollView style={styles.root}>
       <View style={{alignItems: 'center'}}>
@@ -136,6 +137,12 @@ const QuestionnaireScreen = () => {
                 <Switch
                   value={switchState[current.value]}
                   onValueChange={() => {
+                    if (switchState[current.value]) {
+                      weekendDispatch({
+                        type: 'remove',
+                        payload: {day: current.value},
+                      });
+                    }
                     switchDispatch({
                       type: 'toggle',
                       payload: {day: current.value},
@@ -143,55 +150,57 @@ const QuestionnaireScreen = () => {
                   }}
                 />
               </View>
-              <MultiSelect
-                data={DATA}
-                renderItem={renderItem}
-                containerStyle={{
-                  // width: 140,
-                  backgroundColor: '#ccc',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  // justifyContent: 'space-evenly',
-                }}
-                itemContainerStyle={{
-                  width: 140,
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                }}
-                itemTextStyle={{color: '#000'}}
-                // dropdownPosition="top"
-                mode="default" // default is default
-                labelField="label"
-                valueField="value"
-                placeholder="Select Hobbies"
-                value={weekendState[current.value]}
-                flatListProps={{
-                  numColumns: 2,
-                }}
-                onChange={item => {
-                  const day = current.value;
-                  weekendDispatch({
-                    type: 'add',
-                    payload: {day, timing: item},
-                  });
-                }}
-                activeColor={'orangered'}
-                style={{
-                  height: 50,
-                  backgroundColor: 'transparent',
-                  borderBottomColor: 'gray',
-                  borderBottomWidth: 0.5,
-                  width: '90%',
-                }}
-                renderLeftIcon={() => (
-                  <MaterialIcon
-                    style={{marginRight: 8}}
-                    name="clock-time-five-outline"
-                    color={'black'}
-                    size={18}
-                  />
-                )}
-              />
+              {switchState[current.value] ? (
+                <MultiSelect
+                  data={DATA}
+                  renderItem={renderItem}
+                  containerStyle={{
+                    // width: 140,
+                    backgroundColor: '#ccc',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    // justifyContent: 'space-evenly',
+                  }}
+                  itemContainerStyle={{
+                    width: 140,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  itemTextStyle={{color: '#000'}}
+                  // dropdownPosition="top"
+                  mode="default" // default is default
+                  labelField="label"
+                  valueField="value"
+                  placeholder="Select Hobbies"
+                  value={weekendState[current.value]}
+                  flatListProps={{
+                    numColumns: 2,
+                  }}
+                  onChange={item => {
+                    const day = current.value;
+                    weekendDispatch({
+                      type: 'add',
+                      payload: {day, timing: item},
+                    });
+                  }}
+                  activeColor={'orangered'}
+                  style={{
+                    height: 50,
+                    backgroundColor: 'transparent',
+                    borderBottomColor: 'gray',
+                    borderBottomWidth: 0.5,
+                    width: '90%',
+                  }}
+                  renderLeftIcon={() => (
+                    <MaterialIcon
+                      style={{marginRight: 8}}
+                      name="clock-time-five-outline"
+                      color={'black'}
+                      size={18}
+                    />
+                  )}
+                />
+              ) : null}
             </View>
           );
         })}
