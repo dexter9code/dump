@@ -13,7 +13,7 @@ app.use(express.json());
 app.post(`/create-payment`, async (req, res, next) => {
   const customers = await stripe.customers.list();
   const customer = customers.data[0];
-
+  const {planId} = req.body;
   // console.log(customers);
   console.log(customer);
 
@@ -28,13 +28,32 @@ app.post(`/create-payment`, async (req, res, next) => {
     {apiVersion: '2022-11-15'},
   );
 
-  const paymentInit = await stripe.paymentIntents.create({
-    amount: 5000,
-    currency: 'inr',
-    // automatic_payment_methods: {enabled: true},
-    customer: customer.id,
-    payment_method_types: ['card'],
-  });
+  let paymentInit;
+  if (planId === '1') {
+    paymentInit = await stripe.paymentIntents.create({
+      amount: 10000,
+      currency: 'inr',
+      // automatic_payment_methods: {enabled: true},
+      customer: customer.id,
+      payment_method_types: ['card'],
+    });
+  } else if (planId === '2') {
+    paymentInit = await stripe.paymentIntents.create({
+      amount: 20000,
+      currency: 'inr',
+      // automatic_payment_methods: {enabled: true},
+      customer: customer.id,
+      payment_method_types: ['card'],
+    });
+  } else {
+    paymentInit = await stripe.paymentIntents.create({
+      amount: 5000,
+      currency: 'inr',
+      // automatic_payment_methods: {enabled: true},
+      customer: customer.id,
+      payment_method_types: ['card'],
+    });
+  }
 
   console.log(paymentInit.client_secret, ephemeralKey.secret);
 

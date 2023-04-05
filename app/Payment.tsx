@@ -6,7 +6,15 @@ import {
   useConfirmSetupIntent,
   usePaymentSheet,
 } from '@stripe/stripe-react-native';
-import {Text, View, StyleSheet, Button, Alert, Image} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Button,
+  Alert,
+  Image,
+  TextInput,
+} from 'react-native';
 
 const KEY = `sk_test_51LIBpPSB6X3CnjxjCOl3pjiSaomnXNhmgKmcPpapvL9yuXF4uSYXct1Xu858S0lcMSDODUXTLyKmwZ1wjBpJTomD007wL2BUxF`;
 
@@ -14,6 +22,7 @@ const Payment = () => {
   // const { confirmPayment } = useStripe();
   // const { confirmPayment, loading } = useConfirmPayment();
   // const {confirmSetupIntent, loading} = useConfirmSetupIntent();
+  const [plan, setPlan] = useState('');
 
   const [cardData, setCardData] = useState<boolean>(false);
 
@@ -38,14 +47,16 @@ const Payment = () => {
   //     });
   // }, []);
 
-  useEffect(() => {
-    initializePaymentSheet();
-  }, []);
+  // useEffect(() => {
+  //   initializePaymentSheet();
+  // }, []);
 
-  const fetchPaymentSheetParams = async () => {
+  const fetchPaymentSheetParams = async (id: string) => {
+    const obj = {planId: id};
     const response = await fetch(URL, {
       method: `POST`,
       headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(obj),
     });
 
     const {clientSecret, ephemeralKey, customer} = await response.json();
@@ -56,9 +67,9 @@ const Payment = () => {
     };
   };
 
-  async function initializePaymentSheet() {
+  async function initializePaymentSheet(id: string) {
     const {clientSecret, customer, ephemeralKey} =
-      await fetchPaymentSheetParams();
+      await fetchPaymentSheetParams(id);
 
     const {error} = await initPaymentSheet({
       customerId: customer,
@@ -84,7 +95,9 @@ const Payment = () => {
     }
   }
 
-  const buy = async () => {
+  const buy = async (id: string) => {
+    await initializePaymentSheet(id);
+
     const {error} = await presentPaymentSheet();
 
     if (error) {
@@ -157,7 +170,19 @@ const Payment = () => {
         }}
         cardStyle={{borderWidth: 1, borderColor: '#ccc', textErrorColor: 'red'}}
       />
-      <Button title="Pay" onPress={buy} disabled={loading || !cardData} />
+      <TextInput
+        placeholder="Enter your plan id here"
+        onChangeText={e => setPlan(e)}
+        value={plan}
+        style={{
+          backgroundColor: '#ccc',
+          width: '70%',
+          marginVertical: 10,
+          padding: 8,
+          borderRadius: 10,
+        }}
+      />
+      <Button title="Pay" onPress={() => buy(plan)} />
     </View>
   );
 };
