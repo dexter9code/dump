@@ -35,8 +35,15 @@ const Payment = () => {
     loading,
     presentPaymentSheet,
   } = usePaymentSheet();
+  const {
+    isApplePaySupported,
+    presentApplePay,
+    confirmApplePayPayment,
+    createPaymentMethod,
+    confirmPayment,
+  } = useStripe();
 
-  const URL = `http://192.168.1.34:3000/create-payment`;
+  const URL = `http://192.168.1.35:3000/create-payment`;
 
   // useEffect(() => {
   //   fetch(`http://192.168.1.34:3000/create-payment`)
@@ -60,6 +67,7 @@ const Payment = () => {
     });
 
     const {clientSecret, ephemeralKey, customer} = await response.json();
+    console.log(clientSecret);
     return {
       clientSecret,
       ephemeralKey,
@@ -71,29 +79,77 @@ const Payment = () => {
     const {clientSecret, customer, ephemeralKey} =
       await fetchPaymentSheetParams(id);
 
-    const {error} = await initPaymentSheet({
-      customerId: customer,
-      customerEphemeralKeySecret: ephemeralKey,
-      paymentIntentClientSecret: clientSecret,
-      merchantDisplayName: 'Nike Inc',
-      allowsDelayedPaymentMethods: true,
-      returnURL: `stripe-example://stripe-redirect`, // testing only
-      applePay: {
-        merchantCountryCode: `IN`,
-      },
-      googlePay: {
-        merchantCountryCode: 'IN',
-        testEnv: true,
-        currencyCode: 'inr',
-      },
+    // const {error} = await initPaymentSheet({
+    //   customerId: customer,
+    //   customerEphemeralKeySecret: ephemeralKey,
+    //   paymentIntentClientSecret: clientSecret,
+    //   merchantDisplayName: 'Nike Inc',
+    //   allowsDelayedPaymentMethods: true,
+    //   returnURL: `stripe-example://stripe-redirect`, // testing only
+    //   applePay: {
+    //     merchantCountryCode: `IN`,
+    //   },
+    //   googlePay: {
+    //     merchantCountryCode: 'IN',
+    //     testEnv: true,
+    //     currencyCode: 'inr',
+    //   },
+    // });
+
+    const {paymentMethod, error} = await presentApplePay({
+      cartItems: [
+        {
+          label: 'Nike shoes',
+          amount: '100.00',
+          isPending: false,
+          paymentType: 'Immediate',
+        },
+      ],
+      country: 'India',
+      currency: 'inr',
     });
+    console.log(paymentMethod);
 
     if (error) {
       Alert.alert(`Error`, `${error.code} , ${error.message}`);
     } else {
       setCardData(true);
     }
+
+    // const { error: applePayError } = await confirmApplePayPayment(clientSecret)
+    // if (applePayError) {
+    //   console.log(`Error`)
+    // }
   }
+
+  const onPressApplyPay = async () => {
+    const {clientSecret, customer, ephemeralKey} =
+      await fetchPaymentSheetParams(id);
+
+    const {paymentMethod, error} = await presentApplePay({
+      cartItems: [
+        {
+          label: 'Nike shoes',
+          amount: '100.00',
+          isPending: false,
+          paymentType: 'Immediate',
+        },
+      ],
+      country: 'India',
+      currency: 'inr',
+    });
+    console.log(error?.message);
+    console.log(paymentMethod?.id);
+
+    if (paymentMethod?.id) {
+      const {error: applePayError} = await confirmApplePayPayment(clientSecret);
+      if (applePayError) {
+        console.log(`Error`);
+      } else {
+        console.log(`success`);
+      }
+    }
+  };
 
   const buy = async (id: string) => {
     await initializePaymentSheet(id);
@@ -106,6 +162,50 @@ const Payment = () => {
       Alert.alert(`Success`, `Payment has been made Successfully`);
       setCardData(false);
     }
+  };
+
+  const onCBPaymentHandler = async () => {
+    console.log(`pressed`);
+    const {clientSecret, customer, ephemeralKey} =
+      await fetchPaymentSheetParams('1');
+
+    const {paymentMethod, error} = await createPaymentMethod({
+      paymentMethodType: 'Card',
+      paymentMethodData: {
+        billingDetails: {
+          name: 'john',
+        },
+      },
+    });
+    console.log(paymentMethod, `customer`);
+    if (error) {
+      Alert.alert(`Error`, error.message);
+    } else {
+      const {error: CBError} = await confirmPayment(clientSecret);
+      if (CBError) {
+        Alert.alert(`Error`);
+      } else {
+        Alert.alert(`Success`);
+      }
+    }
+
+    // if (error) {
+    //   // Show error in payment form
+    //   console.log(error);
+    // } else {
+    //   // Check if cartes_bancaires is an available card network
+    //   const networks = paymentMethod.card.networks;
+    //   if (networks.available.includes(preferredNetwork)) {
+    //     paymentMethodOptions = {
+    //       card: {
+    //         network: preferredNetwork,
+    //       },
+    //     };
+    //   }
+
+    // const {paymentIntent, error} = await confirmPayment(
+    //   clientSecret,
+    // );
   };
 
   // const onPayment = async () => {
@@ -182,7 +282,9 @@ const Payment = () => {
           borderRadius: 10,
         }}
       />
-      <Button title="Pay" onPress={() => buy(plan)} />
+      {isApplePaySupported && (
+        <Button title="Pay" onPress={onCBPaymentHandler} />
+      )}
     </View>
   );
 };
